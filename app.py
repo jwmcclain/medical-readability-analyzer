@@ -43,17 +43,21 @@ def main():
         st.title("⚙️ Configuration")
         
         st.markdown("### API Credentials")
+        st.markdown("🔗 **Get your API keys:**")
+        st.markdown("- [Google API Key](https://console.cloud.google.com/apis/credentials) - Enable Custom Search API")
+        st.markdown("- [SerpAPI Key](https://serpapi.com/users/sign_up) - Free tier: 100 searches/month")
+        
         api_key = st.text_input(
-            "Google API Key",
+            "Google API Key (Optional)",
             value=config.GOOGLE_API_KEY,
             type="password",
-            help="Your Google Custom Search API key"
+            help="Get your Google Custom Search API key from Google Cloud Console"
         )
         
         search_engine_id = st.text_input(
-            "Search Engine ID",
+            "Search Engine ID (Optional)",
             value=config.SEARCH_ENGINE_ID,
-            help="Your Custom Search Engine ID"
+            help="Create a Custom Search Engine at https://cse.google.com/"
         )
         
         st.divider()
