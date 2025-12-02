@@ -136,8 +136,8 @@ def display_new_analysis_interface(api_key, search_engine_id, num_results, gener
             st.error("⚠️ Please enter a search term")
             return
         
-        if not api_key or not search_engine_id:
-            st.error("⚠️ Please configure API credentials in the sidebar")
+        if not config.SERPAPI_KEY:
+            st.error("⚠️ SerpAPI key is required for search functionality. Please configure it in Streamlit Cloud secrets.")
             return
         
         # Run the analysis
@@ -309,6 +309,22 @@ def run_full_analysis(search_term, api_key, engine_id, num_results, generate_fig
         progress_bar.progress(10)
         st.success(f"✓ Found {len(urls)} results")
         
+        # Check if we got any results
+        if len(urls) == 0:
+            st.error("❌ No search results found. This could be due to:")
+            st.markdown("""
+            - API rate limits exceeded (SerpAPI free tier: 100 searches/month)
+            - Invalid API key
+            - Connection issues
+            - Query restrictions
+            
+            Please try:
+            - Check your SerpAPI account usage
+            - Wait a moment and try again
+            - Try a different search term
+            """)
+            return
+        
         # Step 2: Extract domains
         for url_data in urls:
             from modules.search_serpapi import search_google_fallback
@@ -436,17 +452,24 @@ def display_results():
     with col1:
         st.metric("Total URLs", total)
     with col2:
-        st.metric("Institutional", f"{inst} ({inst/total*100:.0f}%)")
+        inst_pct = (inst/total*100) if total > 0 else 0
+        st.metric("Institutional", f"{inst} ({inst_pct:.0f}%)")
     with col3:
-        st.metric("Private", f"{priv} ({priv/total*100:.0f}%)")
+        priv_pct = (priv/total*100) if total > 0 else 0
+        st.metric("Private", f"{priv} ({priv_pct:.0f}%)")
     with col4:
-        if 'mean_readability' in df.columns:
+        if 'mean_readability' in df.columns and total > 0:
             mean_read = df['mean_readability'].mean()
             st.metric("Mean Readability", f"{mean_read:.1f}")
+        else:
+            st.metric("Mean Readability", "N/A")
     with col5:
-        if 'mean_readability' in df.columns:
+        if 'mean_readability' in df.columns and total > 0:
             universal = len(df[df['mean_readability'] <= 8])
-            st.metric("Universal (≤8)", f"{universal} ({universal/total*100:.0f}%)")
+            univ_pct = (universal/total*100) if total > 0 else 0
+            st.metric("Universal (≤8)", f"{universal} ({univ_pct:.0f}%)")
+        else:
+            st.metric("Universal (≤8)", "N/A")
     
     # Tabbed interface
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
